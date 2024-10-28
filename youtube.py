@@ -42,6 +42,8 @@
 import streamlit as st
 from yt_dlp import YoutubeDL
 from io import BytesIO
+import tempfile
+import os
 
 st.title("Rijo's YouTube Video Downloader")
 
@@ -50,32 +52,48 @@ url = st.text_input("YouTube video URL:")
 if st.button("Download"):
     if url:
         try:
-           #yt-dlp options to download in-memory
+            
+            temp_dir = tempfile.gettempdir()
             ydl_opts = {
                 'format': 'best',
-                'outtmpl': '-',  
                 'noplaylist': True,
+                'outtmpl': os.path.join(temp_dir, '%(title)s.%(ext)s')
             }
 
-            #  BytesIO to hold the downloaded video in memory
             with YoutubeDL(ydl_opts) as ydl:
-                with BytesIO() as video_file:
-                    info = ydl.extract_info(url, download=True)
-                    video_file.write(ydl.prepare_filename(info).encode())
+                info = ydl.extract_info(url, download=True)
+                video_title = info.get('title', 'Video')
 
-                    video_title = info.get('title', 'Video')
-                    st.success(f"Downloaded successfully: {video_title} 😀")
+          
+            video_file = None
+            for file in os.listdir(temp_dir):
+                if file.endswith('.mp4'):
+                    video_file = os.path.join(temp_dir, file)
+                    break
 
-                    video_file.seek(0)  
-                    st.download_button(
-                        label="Click here to download the video",
-                        data=video_file,
-                        file_name=f"{video_title}.mp4",
-                        mime="video/mp4"
-                    )
+            if video_file and os.path.exists(video_file):
+               
+                with open(video_file, "rb") as file:
+                    video_data = BytesIO(file.read())
+
+                st.success(f"Downloaded successfully: {video_title} 😀")
+
+              
+                st.download_button(
+                    label="Click here to download the video",
+                    data=video_data,
+                    file_name=f"{video_title}.mp4",
+                    mime="video/mp4"
+                )
+
+               
+                os.remove(video_file)
+            else:
+                st.error("The downloaded file could not be found in the temporary directory.")
 
         except Exception as e:
             st.error(f"An unexpected error occurred: {e} 😔")
     else:
         st.warning("Please enter a valid YouTube URL.")
+
 
