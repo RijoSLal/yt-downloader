@@ -45,7 +45,7 @@ from io import BytesIO
 import tempfile
 import os
 
-st.title("Rj's YouTube Video Downloader")
+st.title("RJ's YouTube Video Downloader")
 
 url = st.text_input("YouTube video URL:")
 
