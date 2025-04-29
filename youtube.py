@@ -43,7 +43,7 @@ from yt_dlp import YoutubeDL
 from io import BytesIO
 import os
 
-os.environ["STREAMLIT_WATCH"] = "false"
+st.set_option('server.enableXsrfProtection', False)
 
 st.title("RJ's YouTube Video Downloader")
 
