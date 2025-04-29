@@ -45,7 +45,7 @@ import os
 
 
 
-st.title("RJ's YouTube Downloader")
+st.title("RJ's StreamSaver")
 
 url = st.text_input("YouTube video URL:")
 
