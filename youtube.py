@@ -38,12 +38,12 @@
 #     else:
 #         st.warning("Please enter a valid YouTube URL.")
 
-
 import streamlit as st
 from yt_dlp import YoutubeDL
 from io import BytesIO
-import tempfile
 import os
+
+os.environ["STREAMLIT_WATCH"] = "false"
 
 st.title("RJ's YouTube Video Downloader")
 
@@ -52,48 +52,44 @@ url = st.text_input("YouTube video URL:")
 if st.button("Download"):
     if url:
         try:
-            
-            temp_dir = tempfile.gettempdir()
+            buffer = BytesIO()
+
+        
+            temp_video_path = "downloaded_video.mp4"
+
             ydl_opts = {
-                'format': 'best',
+                'format': 'best[ext=mp4]',
                 'noplaylist': True,
-                'outtmpl': os.path.join(temp_dir, '%(title)s.%(ext)s')
+                'outtmpl': temp_video_path,
+                'quiet': True
             }
 
             with YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(url, download=True)
                 video_title = info.get('title', 'Video')
+                thumbnail_url = info.get('thumbnail', None)
 
-          
-            video_file = None
-            for file in os.listdir(temp_dir):
-                if file.endswith('.mp4'):
-                    video_file = os.path.join(temp_dir, file)
-                    break
+            if thumbnail_url:
+                st.image(thumbnail_url, width=320)
 
-            if video_file and os.path.exists(video_file):
-               
-                with open(video_file, "rb") as file:
-                    video_data = BytesIO(file.read())
+            with open(temp_video_path, "rb") as f:
+                buffer.write(f.read())
+                buffer.seek(0)
 
-                st.success(f"Downloaded successfully: {video_title} 😀")
+            st.success(f"Downloaded successfully: {video_title} 😀")
 
-              
-                st.download_button(
-                    label="Click here to download the video",
-                    data=video_data,
-                    file_name=f"{video_title}.mp4",
-                    mime="video/mp4"
-                )
+            st.download_button(
+                label="Click here to download the video",
+                data=buffer,
+                file_name=f"{video_title}.mp4",
+                mime="video/mp4"
+            )
 
-               
-                os.remove(video_file)
-            else:
-                st.error("The downloaded file could not be found in the temporary directory.")
+            os.remove(temp_video_path)
 
         except Exception as e:
-            st.error(f"An unexpected error occurred: {e} 😔")
+            st.error(f"An unexpected error occurred 😔")
     else:
-        st.warning("Please enter a valid YouTube URL.")
+        st.warning("Please enter a valid YouTube URL 😠")
 
 
